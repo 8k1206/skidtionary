@@ -5,16 +5,39 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Skidtionary</title>
     <style>
+        :root {
+            --bg-color: #f4f4f9;
+            --text-color: #333;
+            --header-bg: #007bff;
+            --header-text: white;
+            --entry-bg: white;
+            --entry-shadow: rgba(0,0,0,0.1);
+            --search-border: #ccc;
+            --term-color: #007bff;
+        }
+
+        [data-theme="dark"] {
+            --bg-color: #1e1e1e;
+            --text-color: #e0e0e0;
+            --header-bg: #0056b3;
+            --header-text: #e0e0e0;
+            --entry-bg: #2a2a2a;
+            --entry-shadow: rgba(0,0,0,0.3);
+            --search-border: #555;
+            --term-color: #4da8ff;
+        }
+
         body {
             font-family: Arial, sans-serif;
             margin: 0;
             padding: 0;
-            background-color: #f4f4f9;
-            color: #333;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            transition: background-color 0.3s, color 0.3s;
         }
         header {
-            background-color: #007bff;
-            color: white;
+            background-color: var(--header-bg);
+            color: var(--header-text);
             text-align: center;
             padding: 2rem;
         }
@@ -26,14 +49,28 @@
             max-width: 600px;
             margin: 2rem auto;
             padding: 0 1rem;
+            display: flex;
+            gap: 1rem;
+            align-items: center;
         }
         #search-bar {
-            width: 100%;
+            flex-grow: 1;
             padding: 0.75rem;
             font-size: 1rem;
-            border: 1px solid #ccc;
+            border: 1px solid var(--search-border);
             border-radius: 4px;
             box-sizing: border-box;
+            background-color: var(--entry-bg);
+            color: var(--text-color);
+        }
+        #theme-toggle {
+            padding: 0.75rem;
+            font-size: 1rem;
+            border: 1px solid var(--search-border);
+            border-radius: 4px;
+            background-color: var(--entry-bg);
+            color: var(--text-color);
+            cursor: pointer;
         }
         #results {
             max-width: 600px;
@@ -41,15 +78,15 @@
             padding: 0 1rem;
         }
         .entry {
-            background: white;
+            background: var(--entry-bg);
             padding: 1rem;
             margin-bottom: 1rem;
             border-radius: 4px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 4px var(--entry-shadow);
         }
         .entry h3 {
             margin: 0 0 0.5rem;
-            color: #007bff;
+            color: var(--term-color);
         }
         .entry p {
             margin: 0;
@@ -63,25 +100,26 @@
     </header>
     <div class="search-container">
         <input type="text" id="search-bar" placeholder="Search for a term..." oninput="searchTerms()">
+        <button id="theme-toggle">Toggle Theme</button>
     </div>
     <div id="results"></div>
 
     <script>
         // Dictionary data
         const dictionary = [
-                { term: "Skid", definition: "A script kiddie." },
-                { term: "FUD", definition: "Malware that is fully undetected" },
-                { term: "RAT", definition: "A Remote Access Trojan" },
-                { term: "Fold", definition: "someone getting scared and leaving a gc/server" },
-                { term: "Harmless", definition: "A hacker that really isnt a hacker and cant do shit" },
-                { term: "Federal Entity / Fed", definition: "A federal entity is an organization or body that is created, owned, controlled, or funded by a federal government to carry out specific governmental functions or public services at the national level." },
-                { term: "Whats a bool", definition: "A famous quote from top-level skids" },
-                { term: "RDP", definition: "Remote Desktop Protocol" },
-                { term: "VPS", definition: "Virtual Private Server" },
-                { term: "VPN", definition: "Virtual Private Network" },
-                { term: "AV", definition: "Antivirus" },
-                { term: "Runtime", definition: "AV detections (behavioral / in memory)" },
-                { term: "Scantime", definition: "AV detections at download" },
+            { term: "Skid", definition: "A script kiddie." },
+            { term: "FUD", definition: "Malware that is fully undetected" },
+            { term: "RAT", definition: "A Remote Access Trojan" },
+            { term: "Fold", definition: "someone getting scared and leaving a gc/server" },
+            { term: "Harmless", definition: "A hacker that really isnt a hacker and cant do shit" },
+            { term: "Federal Entity / Fed", definition: "A federal entity is an organization or body that is created, owned, controlled, or funded by a federal government to carry out specific governmental functions or public services at the national level." },
+            { term: "Whats a bool", definition: "A famous quote from top-level skids" },
+            { term: "RDP", definition: "Remote Desktop Protocol" },
+            { term: "VPS", definition: "Virtual Private Server" },
+            { term: "VPN", definition: "Virtual Private Network" },
+            { term: "AV", definition: "Antivirus" },
+            { term: "Runtime", definition: "AV detections (behavioral / in memory)" },
+            { term: "Scantime", definition: "AV detections at download" },
         ];
 
         // Search function
@@ -107,6 +145,23 @@
                 resultsDiv.appendChild(entryDiv);
             });
         }
+
+        // Theme toggle function
+        const themeToggle = document.getElementById('theme-toggle');
+        const body = document.body;
+
+        // Load saved theme from localStorage
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        body.setAttribute('data-theme', savedTheme);
+        themeToggle.textContent = savedTheme === 'dark' ? 'Light Mode' : 'Dark Mode';
+
+        themeToggle.addEventListener('click', () => {
+            const currentTheme = body.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            body.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            themeToggle.textContent = newTheme === 'dark' ? 'Light Mode' : 'Dark Mode';
+        });
 
         // Display all terms on page load
         searchTerms();
