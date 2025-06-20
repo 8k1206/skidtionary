@@ -1,170 +1,283 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Skidtionary</title>
-    <style>
-        :root {
-            --bg-color: #f4f4f9;
-            --text-color: #333;
-            --header-bg: #007bff;
-            --header-text: white;
-            --entry-bg: white;
-            --entry-shadow: rgba(0,0,0,0.1);
-            --search-border: #ccc;
-            --term-color: #007bff;
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Skidtionary</title>
+  <style>
+    :root {
+      --bg-color: #f4f4f9;
+      --text-color: #333;
+      --header-bg: #007bff;
+      --header-text: white;
+      --entry-bg: white;
+      --entry-shadow: rgba(0, 0, 0, 0.1);
+      --search-border: #ccc;
+      --term-color: #007bff;
+    }
 
-        [data-theme="dark"] {
-            --bg-color: #1e1e1e;
-            --text-color: #e0e0e0;
-            --header-bg: #0056b3;
-            --header-text: #e0e0e0;
-            --entry-bg: #2a2a2a;
-            --entry-shadow: rgba(0,0,0,0.3);
-            --search-border: #555;
-            --term-color: #4da8ff;
-        }
+    [data-theme="dark"] {
+      --bg-color: #1e1e1e;
+      --text-color: #e0e0e0;
+      --header-bg: #0056b3;
+      --header-text: #e0e0e0;
+      --entry-bg: #2a2a2a;
+      --entry-shadow: rgba(0, 0, 0, 0.3);
+      --search-border: #555;
+      --term-color: #4da8ff;
+    }
 
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            transition: background-color 0.3s, color 0.3s;
-        }
-        header {
-            background-color: var(--header-bg);
-            color: var(--header-text);
-            text-align: center;
-            padding: 2rem;
-        }
-        h1 {
-            margin: 0;
-            font-size: 2.5rem;
-        }
-        .search-container {
-            max-width: 600px;
-            margin: 2rem auto;
-            padding: 0 1rem;
-            display: flex;
-            gap: 1rem;
-            align-items: center;
-        }
-        #search-bar {
-            flex-grow: 1;
-            padding: 0.75rem;
-            font-size: 1rem;
-            border: 1px solid var(--search-border);
-            border-radius: 4px;
-            box-sizing: border-box;
-            background-color: var(--entry-bg);
-            color: var(--text-color);
-        }
-        #theme-toggle {
-            padding: 0.75rem;
-            font-size: 1rem;
-            border: 1px solid var(--search-border);
-            border-radius: 4px;
-            background-color: var(--entry-bg);
-            color: var(--text-color);
-            cursor: pointer;
-        }
-        #results {
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 0 1rem;
-        }
-        .entry {
-            background: var(--entry-bg);
-            padding: 1rem;
-            margin-bottom: 1rem;
-            border-radius: 4px;
-            box-shadow: 0 2px 4px var(--entry-shadow);
-        }
-        .entry h3 {
-            margin: 0 0 0.5rem;
-            color: var(--term-color);
-        }
-        .entry p {
-            margin: 0;
-        }
-    </style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      transition: background-color 0.3s, color 0.3s;
+      overflow-x: hidden;
+    }
+
+    header {
+      background-color: var(--header-bg);
+      color: var(--header-text);
+      text-align: center;
+      padding: 2rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 2.5rem;
+    }
+
+    .search-container {
+      max-width: 700px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+      justify-content: space-between;
+      position: relative;
+      z-index: 1;
+      flex-wrap: wrap;
+    }
+
+    #search-bar,
+    #theme-toggle,
+    #credits-button {
+      padding: 0.75rem;
+      font-size: 1rem;
+      border: 1px solid var(--search-border);
+      border-radius: 4px;
+      background-color: var(--entry-bg);
+      color: var(--text-color);
+      box-sizing: border-box;
+    }
+
+    #search-bar {
+      flex-grow: 1;
+      min-width: 200px;
+    }
+
+    #theme-toggle,
+    #credits-button {
+      cursor: pointer;
+      text-align: center;
+    }
+
+    #credits-button {
+      text-decoration: none;
+      transition: background-color 0.2s, color 0.2s;
+    }
+
+    #credits-button:hover {
+      background-color: var(--term-color);
+      color: white;
+    }
+
+    #results {
+      max-width: 700px;
+      margin: 0 auto;
+      padding: 0 1rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    .entry {
+      background: var(--entry-bg);
+      padding: 1rem;
+      margin-bottom: 1rem;
+      border-radius: 4px;
+      box-shadow: 0 2px 4px var(--entry-shadow);
+    }
+
+    .entry h3 {
+      margin: 0 0 0.5rem;
+      color: var(--term-color);
+    }
+
+    .entry p {
+      margin: 0;
+    }
+
+    #starfield {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 0;
+    }
+  </style>
 </head>
 <body>
-    <header>
-        <h1>Skidtionary</h1>
-        <p>Your Dictionary for Skid Terms</p>
-    </header>
-    <div class="search-container">
-        <input type="text" id="search-bar" placeholder="Search for a term..." oninput="searchTerms()">
-        <button id="theme-toggle">Toggle Theme</button>
-    </div>
-    <div id="results"></div>
+  <canvas id="starfield"></canvas>
 
-    <script>
-        // Dictionary data
-        const dictionary = [
-            { term: "Skid", definition: "A script kiddie." },
-            { term: "FUD", definition: "Malware that is fully undetected" },
-            { term: "RAT", definition: "A Remote Access Trojan" },
-            { term: "Fold", definition: "someone getting scared and leaving a gc/server" },
-            { term: "Harmless", definition: "A hacker that really isnt a hacker and cant do shit" },
-            { term: "Federal Entity / Fed", definition: "A federal entity is an organization or body that is created, owned, controlled, or funded by a federal government to carry out specific governmental functions or public services at the national level." },
-            { term: "Whats a bool", definition: "A famous quote from top-level skids" },
-            { term: "RDP", definition: "Remote Desktop Protocol" },
-            { term: "VPS", definition: "Virtual Private Server" },
-            { term: "VPN", definition: "Virtual Private Network" },
-            { term: "AV", definition: "Antivirus" },
-            { term: "Runtime", definition: "AV detections (behavioral / in memory)" },
-            { term: "Scantime", definition: "AV detections at download" },
-        ];
+  <header>
+    <h1>Skidtionary</h1>
+    <p>Your Dictionary for Skid Terms</p>
+  </header>
 
-        // Search function
-        function searchTerms() {
-            const query = document.getElementById('search-bar').value.toLowerCase();
-            const resultsDiv = document.getElementById('results');
-            resultsDiv.innerHTML = '';
+  <div class="search-container">
+    <input type="text" id="search-bar" placeholder="Search for a term..." oninput="searchTerms()" />
+    <button id="theme-toggle">Toggle Theme</button>
+    <a href="https://skidtionary.xyz/credits/" id="credits-button">Credits</a>
+  </div>
 
-            const filteredTerms = dictionary.filter(entry => 
-                entry.term.toLowerCase().includes(query) || 
-                entry.definition.toLowerCase().includes(query)
-            );
+  <div id="results"></div>
 
-            if (filteredTerms.length === 0) {
-                resultsDiv.innerHTML = '<p>No results found.</p>';
-                return;
-            }
+  <script>
+    const dictionary = [
+      { term: "Skid", definition: "A script kiddie." },
+      { term: "FUD", definition: "Fully undetected" },
+      { term: "UD", definition: "Undetected" },
+      { term: "RAT", definition: "Remote Access Trojan" },
+      { term: "FOLD", definition: "Someone getting scared and leaving a gc/server" },
+      { term: "Harmless", definition: "A hacker that really isnt a hacker and cant do shit" },
+      { term: "Federal Entity / Fed", definition: "A federal entity is an organization or body that is created, owned, controlled, or funded by a federal government to carry out specific governmental functions or public services at the national level." },
+      { term: "Whats a bool", definition: "A  famous quote from top-level skids" },
+      { term: "RDP", definition: "Remote Desktop Protocol" },
+      { term: "VPS", definition: "Virtual Private Server" },
+      { term: "VPN", definition: "Virtual Private Network" },
+      { term: "AV", definition: "Anti Virus" },
+      { term: "RUNTIME", definition: "AV detections (behavioral / in memory)" },
+      { term: "SCANTIME", definition: "AV detections at download" },
+      { term: "What a bool in memory", definition: "Things a skid says when he is getting mad" },
+      { term: "DDOS", definition: "distributed denial of service attack" },
+      { term: "IP", definition: "internet protocol" },
+      { term: "ISP", definition: "internet service provider" },
+      { term: "Entity", definition: "\"show a ledger guy\" / \"baguette boy\"" },
+      { term: "Swat", definition: "sending cops to your house" },
+      { term: "Pizza bombing", definition: "sending pizzas to someone's house unpaid" },
+      { term: "OSINT", definition: "open souce inteligence" },
+      { term: "CSINT", definition: "closed source inteligence" },
+      { term: "COM", definition: "scary opsec hacker hangout" },
+      { term: "OPSEC", definition: "operational security" },
+      { term: "GDI", definition: "screen breaking malware" },
+      { term: "Grabber", definition: "something that takes your shit / passwords" },
+      { term: "EDR", definition: "emergency data request (from a .gov mail)" },
+      { term: "Harmful", definition: "someone who can cause people harm (SWAT / Doxx you)" },
+      { term: "Obfuscation", definition: "making code unreadable / uncrackable" },
+      { term: "Rootkit", definition: "A common attribute of RATs to keep it from being removed from the clients computer" },
+      { term: "Bootkit", definition: "Attribute that executes the RAT upon starting up the computer" },
+      { term: "Crypter", definition: "Makes malicious code UD / FUD" }
+    ];
 
-            filteredTerms.forEach(entry => {
-                const entryDiv = document.createElement('div');
-                entryDiv.className = 'entry';
-                entryDiv.innerHTML = `<h3>${entry.term}</h3><p>${entry.definition}</p>`;
-                resultsDiv.appendChild(entryDiv);
-            });
-        }
+    function searchTerms() {
+      const query = document.getElementById('search-bar').value.toLowerCase();
+      const resultsDiv = document.getElementById('results');
+      resultsDiv.innerHTML = '';
 
-        // Theme toggle function
-        const themeToggle = document.getElementById('theme-toggle');
-        const body = document.body;
+      const filteredTerms = dictionary.filter(entry =>
+        entry.term.toLowerCase().includes(query) ||
+        entry.definition.toLowerCase().includes(query)
+      );
 
-        // Load saved theme from localStorage
-        const savedTheme = localStorage.getItem('theme') || 'light';
-        body.setAttribute('data-theme', savedTheme);
-        themeToggle.textContent = savedTheme === 'dark' ? 'Light Mode' : 'Dark Mode';
+      if (filteredTerms.length === 0) {
+        resultsDiv.innerHTML = '<p>No results found.</p>';
+        return;
+      }
 
-        themeToggle.addEventListener('click', () => {
-            const currentTheme = body.getAttribute('data-theme');
-            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-            body.setAttribute('data-theme', newTheme);
-            localStorage.setItem('theme', newTheme);
-            themeToggle.textContent = newTheme === 'dark' ? 'Light Mode' : 'Dark Mode';
+      filteredTerms.forEach(entry => {
+        const entryDiv = document.createElement('div');
+        entryDiv.className = 'entry';
+        entryDiv.innerHTML = `<h3>${entry.term}</h3><p>${entry.definition}</p>`;
+        resultsDiv.appendChild(entryDiv);
+      });
+    }
+
+    const themeToggle = document.getElementById('theme-toggle');
+    const body = document.body;
+
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    body.setAttribute('data-theme', savedTheme);
+    themeToggle.textContent = savedTheme === 'dark' ? 'Light Mode' : 'Dark Mode';
+
+    themeToggle.addEventListener('click', () => {
+      const currentTheme = body.getAttribute('data-theme');
+      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      body.setAttribute('data-theme', newTheme);
+      localStorage.setItem('theme', newTheme);
+      themeToggle.textContent = newTheme === 'dark' ? 'Light Mode' : 'Dark Mode';
+    });
+
+    searchTerms();
+
+    // STARFIELD: right-to-left animation, fast
+    const canvas = document.getElementById('starfield');
+    const ctx = canvas.getContext('2d');
+    let stars = [];
+    const STAR_COUNT = 100;
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    function createStars() {
+      stars = [];
+      for (let i = 0; i < STAR_COUNT; i++) {
+        stars.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height,
+          size: Math.random() * 2,
+          speed: Math.random() * 2 + 1.5  // fast
         });
+      }
+    }
 
-        // Display all terms on page load
-        searchTerms();
-    </script>
+    function getStarColor() {
+      return document.body.getAttribute('data-theme') === 'dark' ? 'white' : 'black';
+    }
+
+    function animateStars() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = getStarColor();
+      stars.forEach(star => {
+        ctx.beginPath();
+        ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+        ctx.fill();
+        star.x -= star.speed;
+        if (star.x < 0) {
+          star.x = canvas.width;
+          star.y = Math.random() * canvas.height;
+        }
+      });
+      requestAnimationFrame(animateStars);
+    }
+
+    createStars();
+    animateStars();
+
+    themeToggle.addEventListener('click', () => {
+      setTimeout(() => ctx.fillStyle = getStarColor(), 300);
+    });
+  </script>
 </body>
 </html>
