@@ -1,4 +1,43 @@
-<!DOCTYPE html>
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -14,6 +53,10 @@
       --entry-shadow: rgba(0, 0, 0, 0.1);
       --search-border: #ccc;
       --term-color: #007bff;
+      --modal-bg: rgba(0, 0, 0, 0.5);
+      --modal-content-bg: white;
+      --button-bg: #007bff;
+      --button-text: white;
     }
 
     [data-theme="dark"] {
@@ -25,6 +68,10 @@
       --entry-shadow: rgba(0, 0, 0, 0.3);
       --search-border: #555;
       --term-color: #4da8ff;
+      --modal-bg: rgba(0, 0, 0, 0.7);
+      --modal-content-bg: #2a2a2a;
+      --button-bg: #4da8ff;
+      --button-text: #e0e0e0;
     }
 
     body {
@@ -66,7 +113,10 @@
 
     #search-bar,
     #theme-toggle,
-    #credits-button {
+    #credits-button,
+    #submit-entry-button,
+    #new-term,
+    #new-definition {
       padding: 0.75rem;
       font-size: 1rem;
       border: 1px solid var(--search-border);
@@ -82,17 +132,20 @@
     }
 
     #theme-toggle,
-    #credits-button {
+    #credits-button,
+    #submit-entry-button {
       cursor: pointer;
       text-align: center;
     }
 
-    #credits-button {
+    #credits-button,
+    #submit-entry-button {
       text-decoration: none;
       transition: background-color 0.2s, color 0.2s;
     }
 
-    #credits-button:hover {
+    #credits-button:hover,
+    #submit-entry-button:hover {
       background-color: var(--term-color);
       color: white;
     }
@@ -131,6 +184,75 @@
       pointer-events: none;
       z-index: 0;
     }
+
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: var(--modal-bg);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-content {
+      background-color: var(--modal-content-bg);
+      padding: 2rem;
+      border-radius: 8px;
+      width: 90%;
+      max-width: 400px;
+      box-shadow: 0 4px 8px var(--entry-shadow);
+      position: relative;
+    }
+
+    .modal-content h2 {
+      margin-top: 0;
+      color: var(--term-color);
+    }
+
+    .modal-content input,
+    .modal-content textarea {
+      width: 100%;
+      margin-bottom: 1rem;
+    }
+
+    .modal-content textarea {
+      resize: vertical;
+      min-height: 100px;
+    }
+
+    .modal-content button {
+      background-color: var(--button-bg);
+      color: var(--button-text);
+      border: none;
+      padding: 0.75rem;
+      border-radius: 4px;
+      cursor: pointer;
+      width: 100%;
+      font-size: 1rem;
+    }
+
+    .modal-content button:hover {
+      background-color: var(--term-color);
+    }
+
+    .close {
+      position: absolute;
+      top: 10px;
+      right: 15px;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: var(--text-color);
+    }
+
+    #entry-error {
+      color: red;
+      margin-bottom: 1rem;
+      display: none;
+    }
   </style>
 </head>
 <body>
@@ -144,13 +266,25 @@
   <div class="search-container">
     <input type="text" id="search-bar" placeholder="Search for a term..." oninput="searchTerms()" />
     <button id="theme-toggle">Toggle Theme</button>
+    <button id="submit-entry-button">Submit Entry</button>
     <a href="https://skidtionary.xyz/credits/" id="credits-button">Credits</a>
   </div>
 
   <div id="results"></div>
 
+  <div id="entry-modal" class="modal">
+    <div class="modal-content">
+      <span class="close">×</span>
+      <h2>Submit New Entry</h2>
+      <p id="entry-error">Error message</p>
+      <input type="text" id="new-term" placeholder="Term" />
+      <textarea id="new-definition" placeholder="Definition"></textarea>
+      <button id="entry-submit">Submit</button>
+    </div>
+  </div>
+
   <script>
-    const dictionary = [
+    let dictionary = [
       { term: "Skid", definition: "A script kiddie." },
       { term: "FUD", definition: "Fully undetected" },
       { term: "UD", definition: "Undetected" },
@@ -158,7 +292,7 @@
       { term: "FOLD", definition: "Someone getting scared and leaving a gc/server" },
       { term: "Harmless", definition: "A hacker that really isnt a hacker and cant do shit" },
       { term: "Federal Entity / Fed", definition: "A federal entity is an organization or body that is created, owned, controlled, or funded by a federal government to carry out specific governmental functions or public services at the national level." },
-      { term: "Whats a bool", definition: "A  famous quote from top-level skids" },
+      { term: "Whats a bool", definition: "A famous quote from top-level skids" },
       { term: "RDP", definition: "Remote Desktop Protocol" },
       { term: "VPS", definition: "Virtual Private Server" },
       { term: "VPN", definition: "Virtual Private Network" },
@@ -172,8 +306,8 @@
       { term: "Entity", definition: "\"show a ledger guy\" / \"baguette boy\"" },
       { term: "Swat", definition: "sending cops to your house" },
       { term: "Pizza bombing", definition: "sending pizzas to someone's house unpaid" },
-      { term: "OSINT", definition: "open souce inteligence" },
-      { term: "CSINT", definition: "closed source inteligence" },
+      { term: "OSINT", definition: "open source intelligence" },
+      { term: "CSINT", definition: "closed source intelligence" },
       { term: "COM", definition: "scary opsec hacker hangout" },
       { term: "OPSEC", definition: "operational security" },
       { term: "GDI", definition: "screen breaking malware" },
@@ -185,6 +319,12 @@
       { term: "Bootkit", definition: "Attribute that executes the RAT upon starting up the computer" },
       { term: "Crypter", definition: "Makes malicious code UD / FUD" }
     ];
+
+    // Load user-submitted entries from localStorage
+    const storedEntries = localStorage.getItem('userEntries');
+    if (storedEntries) {
+      dictionary = dictionary.concat(JSON.parse(storedEntries));
+    }
 
     function searchTerms() {
       const query = document.getElementById('search-bar').value.toLowerCase();
@@ -224,6 +364,70 @@
       themeToggle.textContent = newTheme === 'dark' ? 'Light Mode' : 'Dark Mode';
     });
 
+    // Entry submission logic
+    const submitEntryButton = document.getElementById('submit-entry-button');
+    const entryModal = document.getElementById('entry-modal');
+    const entrySubmit = document.getElementById('entry-submit');
+    const newTerm = document.getElementById('new-term');
+    const newDefinition = document.getElementById('new-definition');
+    const entryError = document.getElementById('entry-error');
+    const closeModal = document.querySelector('.close');
+
+    function showModal() {
+      entryModal.style.display = 'flex';
+      newTerm.value = '';
+      newDefinition.value = '';
+      entryError.style.display = 'none';
+    }
+
+    function hideModal() {
+      entryModal.style.display = 'none';
+    }
+
+    submitEntryButton.addEventListener('click', showModal);
+
+    entrySubmit.addEventListener('click', () => {
+      const term = newTerm.value.trim();
+      const definition = newDefinition.value.trim();
+
+      if (!term || !definition) {
+        entryError.textContent = 'Please fill in both term and definition';
+        entryError.style.display = 'block';
+        return;
+      }
+
+      if (dictionary.some(entry => entry.term.toLowerCase() === term.toLowerCase())) {
+        entryError.textContent = 'This term already exists';
+        entryError.style.display = 'block';
+        return;
+      }
+
+      const newEntry = { term, definition };
+      dictionary.push(newEntry);
+
+      // Store user-submitted entries in localStorage
+      const userEntries = dictionary.filter(entry => ![
+        "Skid", "FUD", "UD", "RAT", "FOLD", "Harmless", "Federal Entity / Fed",
+        "Whats a bool", "RDP", "VPS", "VPN", "AV", "RUNTIME", "SCANTIME",
+        "What a bool in memory", "DDOS", "IP", "ISP", "Entity", "Swat",
+        "Pizza bombing", "OSINT", "CSINT", "COM", "OPSEC", "GDI", "Grabber",
+        "EDR", "Harmful", "Obfuscation", "Rootkit", "Bootkit", "Crypter"
+      ].includes(entry.term));
+      localStorage.setItem('userEntries', JSON.stringify(userEntries));
+
+      hideModal();
+      searchTerms();
+      alert('Entry submitted successfully');
+    });
+
+    closeModal.addEventListener('click', hideModal);
+
+    window.addEventListener('click', (event) => {
+      if (event.target === entryModal) {
+        hideModal();
+      }
+    });
+
     searchTerms();
 
     // STARFIELD: right-to-left animation, fast
@@ -247,7 +451,7 @@
           x: Math.random() * canvas.width,
           y: Math.random() * canvas.height,
           size: Math.random() * 2,
-          speed: Math.random() * 2 + 1.5  // fast
+          speed: Math.random() * 2 + 1.5
         });
       }
     }
